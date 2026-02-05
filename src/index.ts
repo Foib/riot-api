@@ -9,7 +9,7 @@ import debug from "debug";
 import { RedisOptions } from "ioredis";
 import { compile } from "path-to-regexp";
 import qs from "querystring";
-import { Leaves, MongoOptionsExtended, RiotAPITypes } from "./@types";
+import { Leaves, RiotAPITypes } from "./@types";
 import { ICache, MemoryCache, MongoCache, RedisCache } from "./cache";
 import { DDragon } from "./ddragon";
 import { regionToCluster } from "./utils";
@@ -71,11 +71,9 @@ export class RiotAPI {
         this.cache = new RedisCache(this.config.cache?.client as RedisOptions);
         break;
       case "mongodb":
-        const mongodbClientData = this.config.cache
-          ?.client as MongoOptionsExtended;
         this.cache = new MongoCache(
-          mongodbClientData.url,
-          mongodbClientData.MongoClientOptions
+          this.config.cache?.client.url,
+          this.config.cache?.client.MongoClientOptions
         );
         break;
     }
@@ -1222,7 +1220,7 @@ export class RiotAPI {
       }: {
         tournamentCode: string;
         body: RiotAPITypes.TournamentV5.TournamentCodeUpdateParametersV5DTO;
-      }): Promise<any> =>
+      }): Promise<void> =>
         this.request(
           PlatformId.AMERICAS,
           RiotAPITypes.METHOD_KEY.TOURNAMENT_V5.GET_TOURNAMENT_BY_CODE,

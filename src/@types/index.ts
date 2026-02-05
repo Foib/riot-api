@@ -1,6 +1,6 @@
 import { PlatformId } from "@fightmegg/riot-rate-limiter";
 import { RedisOptions } from "ioredis";
-import { MongoClientOptions, MongoOptions } from "mongodb";
+import { MongoClientOptions } from "mongodb";
 
 export type Leaves<T> = T extends object
   ? {

@@ -49,14 +49,14 @@ export class MongoCache implements ICache {
     const indexes = await this._collection.indexes();
 
     if (!indexes.some((index) => index.name === this.keyIndexName)) {
-      this._collection.createIndex(
+      await this._collection.createIndex(
         { key: 1 },
         { unique: true, name: this.keyIndexName }
       );
     }
 
     if (!indexes.some((index) => index.name === this.ttlIndexName)) {
-      this._collection.createIndex(
+      await this._collection.createIndex(
         { expiresAt: 1 },
         { expireAfterSeconds: 0, name: this.ttlIndexName }
       );
