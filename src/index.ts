@@ -9,8 +9,8 @@ import debug from "debug";
 import { RedisOptions } from "ioredis";
 import { compile } from "path-to-regexp";
 import qs from "querystring";
-import { Leaves, RiotAPITypes } from "./@types";
-import { MemoryCache, RedisCache } from "./cache";
+import { Leaves, MongoOptionsExtended, RiotAPITypes } from "./@types";
+import { ICache, MemoryCache, MongoCache, RedisCache } from "./cache";
 import { DDragon } from "./ddragon";
 import { regionToCluster } from "./utils";
 
@@ -37,7 +37,7 @@ const getPath = (key: Leaves<METHODS>): string => {
 export { DDragon, PlatformId, RiotAPITypes, regionToCluster };
 
 export class RiotAPI {
-  readonly cache?: MemoryCache | RedisCache;
+  readonly cache?: ICache;
 
   readonly riotRateLimiter: RiotRateLimiter;
 
@@ -57,15 +57,28 @@ export class RiotAPI {
 
     this.riotRateLimiter = new RiotRateLimiter({
       concurrency: 10,
-      datastore: this.config.cache?.cacheType || "local",
+      datastore:
+        this.config.cache?.cacheType === "ioredis" ? "ioredis" : "local",
       redis: this.config.cache?.client as Bottleneck.RedisConnectionOptions,
     });
     this.ddragon = new DDragon();
 
-    if (this.config.cache?.cacheType === "local")
-      this.cache = new MemoryCache();
-    else if (this.config.cache?.cacheType === "ioredis")
-      this.cache = new RedisCache(this.config.cache?.client as RedisOptions);
+    switch (this.config.cache?.cacheType) {
+      case "local":
+        this.cache = new MemoryCache();
+        break;
+      case "ioredis":
+        this.cache = new RedisCache(this.config.cache?.client as RedisOptions);
+        break;
+      case "mongodb":
+        const mongodbClientData = this.config.cache
+          ?.client as MongoOptionsExtended;
+        this.cache = new MongoCache(
+          mongodbClientData.url,
+          mongodbClientData.MongoClientOptions
+        );
+        break;
+    }
   }
 
   private getHeaders(headers?: { [key: string]: string }) {
